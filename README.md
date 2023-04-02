@@ -1,1 +1,4 @@
 # Frame_Works_And_Methods
+Business transactions, user online activity, social media activity, personal data generating devices, and device sensors are all rapidly producing data. There are opportunities to predict outcomes and explain phenomena in a wide range of fields, including business, space exploration, medicine, and the easy availability of this unprecedented amount of data. Techniques of supervised learning are being used a lot to make useful predictions and come up with solutions to problems. This course focuses on these strategies for predictive analysis.
+
+This repository will aid in the development of knowledge and abilities regarding the application of predictive models to enhance outcomes for stakeholders. It will cover everything from gradient boosting to linear regression in supervised learning. We will show how predictive models can benefit from data wrangling techniques. R will be used to build the predictive models in this repository.
