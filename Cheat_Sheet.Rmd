@@ -123,6 +123,171 @@ print(dfSummary(mpg,style='grid',graph.col = T),method = 'render')
 
 ```
 
+
+##### Interactive table
+
+
+```{r}
+
+library(DT)
+datatable(mpg)
+
+# last five rows
+tail(mpg,n = 5)
+
+```
+
+
+##### Subset
+
+
+```{r}
+
+names(mpg)
+mpg[,"manufacturer"]
+head(mpg)
+mpg[mpg$displ>2,c("manufacturer","model")]
+
+# arrange it in ascending order
+mpg_subset = mpg[mpg$displ>2,c("manufacturer","model","year")]
+mpg_subset
+mpg_subset[order(mpg_subset$year, decreasing  = F),]
+
+# Using Dplyr
+mpg%>%
+  filter(displ>2) %>%
+  select(manufacturer,model,year)%>%
+  arrange(year)
+```
+
+
+##### Visual Summary {.tabset}
+
+###### Histogram
+
+```{r}
+
+ggplot(data=mpg,mapping = aes(x=hwy))+
+  geom_histogram()
+
+hist(mpg$hwy)
+
+# using binwidth
+ggplot(data=mpg,mapping = aes(x=hwy))+
+  geom_histogram(binwidth = 2)
+
+# comparing yearly
+ggplot(data=mpg,mapping = aes(x=hwy,fill=factor(year)))+
+  geom_histogram()
+
+# frequency polygon
+ggplot(data=mpg,mapping = aes(x=hwy,color=factor(year)))+
+  geom_freqpoly(size=1.2)
+
+ggplot(data=mpg,aes(x=hwy,color=factor(drv)))+
+  geom_freqpoly(size=1.2)
+
+# The issue of unequal sample sizes can be addressed by comparing standardized frequency distributions called density curves.
+
+ggplot(data=mpg,aes(x=hwy,color=factor(drv)))+
+  geom_density(size=1.2)
+```
+###### BoxPlot
+A box plot (also known as a box and whisker plot) is another handy chart for examining a distribution. However, it is not as popular as a histogram for examining distribution of a single variable. On the other hand, these plots are useful for comparing distributions. They are also useful for spotting outliers.
+
+```{r}
+ggplot(data=mpg,aes(x="",y=hwy))+
+  geom_boxplot()
+
+ggplot(data=mpg,aes(x=factor(year),y=hwy))+
+  geom_boxplot()
+
+ggplot(data=mpg,aes(x=factor(year),y=hwy))+
+  geom_boxplot(outlier.color='red', fill='cadetblue',color='sienna')+
+  geom_text(data=mpg[mpg$hwy>quantile(mpg$hwy,0.99),], aes(label=manufacturer),nudge_x = 0.2)
+```
+###### QQ Plot
+Most commonly used to see if data comes from a normal distribution by plotting quantiles of data against quantiles expected from a normal distribution. If the data are normally distributed the points in the plot will cluster around the diagonal running from bottom left to top right. Lets examine distribution of hwy and then examine it for each drive train, drv.
+```{r}
+ggplot(data=mpg, aes(sample=hwy))+
+  geom_qq_line()+
+  geom_qq()
+
+ggplot(data=mpg, aes(sample=hwy, color=drv))+
+  geom_qq_line()+
+  geom_qq()
+```
+
+###### Bar Chart
+Typically used to compare summary of numerical variables across levels of a categorical variable. Bar charts are created using the geom, geom_bar. To get familiar with the workings of geom_bar, let us create a bar chart that compares the number of cars of each drive train, drv. Since the goal is to compare counts, we don’t need to specify a numerical variable.
+
+
+```{r}
+ggplot(data=mpg, aes(x=drv, y=hwy, fill=drv))+
+  geom_bar(stat='summary', fun='median', show.legend=F)
+ggplot(data=mpg, aes(x=drv, y=hwy, fill=drv))+
+  geom_bar(stat='summary', fun='median', show.legend=F)+
+  coord_flip()
+
+ggplot(data=mpg,aes(x=factor(drv),fill=factor(year),y=hwy))+
+  geom_bar(stat = 'summary', fun='mean', position='dodge')
+```
+
+###### Scatter Plot
+
+```{r}
+ggplot(data=mpg,aes(x=displ,y=cty,color=factor(year)))+
+  geom_point()
+
+
+g1 = ggplot(data=mpg,aes(x=displ,y=cty,color=factor(year)))+
+  geom_point()+ggtitle('color aesthetic')
+g2 = ggplot(data=mpg,aes(x=displ,y=cty,size=factor(year)))+
+  geom_point()+ggtitle('size aesthetic')
+g3 = ggplot(data=mpg,aes(x=displ,y=cty,alpha=factor(year)))+
+  geom_point()+ggtitle('alpha aesthetic')
+g4 = ggplot(data=mpg,aes(x=displ,y=cty,shape=factor(year)))+
+  geom_point()+ggtitle('shape aesthetic')
+library(gridExtra)
+chart = grid.arrange(g1,g2,g3,g4)
+```
+
+###### Line Graph
+
+With large number of points and overplotting, spotting a trend in a scatterplot can be difficult. A line graph can clearly depict the trend in the data.
+
+```{r}
+
+ggplot(data=mpg,aes(x=displ,y=cty,color=factor(year)))+
+  geom_point()+
+  geom_smooth(method='lm',se=F,size=1.2)
+```
+
+
+###### Facet
+Facets create a grid of smaller plots that display different subsets of the data
+```{r}
+
+ggplot(data=mpg,aes(x=displ,y=hwy))+
+  geom_point()+
+  facet_grid(.~cyl)
+
+ggplot(data=mpg,aes(x=displ,y=hwy))+
+  geom_point()+
+  facet_grid(cyl~.)
+
+ggplot(data=mpg,aes(x=displ,y=hwy))+
+  geom_point()+
+  facet_wrap(~cyl)
+
+# Grid
+# Lastly, we can facet two different variables by including them as x and y axes in facet_grid(). In the example below, we add a fourth variable, year to facet_grid().
+
+ggplot(data=mpg,aes(x=displ,y=hwy))+
+  geom_point()+
+  facet_grid(cyl~year)
+```
+
 #### Prediction Algorithms {.tabset}
 
 ##### Decision Tree {.tabset}
