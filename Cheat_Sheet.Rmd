@@ -1,0 +1,391 @@
+ ---
+title: "RMarkdown, Simplified"
+author: "Author:  Srivastav Budugutta"
+output: html_document
+---
+
+# FrameWorks and Method 1 Cheat Sheet {.tabset}
+
+## Basic Codes {.tabset}
+
+### R code {.tabset}
+
+#### Working with R {.tabset}
+
+##### Data Structure
+vector: one-dimensional, all objects belong to same class
+list: laundry-bag type flexible structure that can contain objects of different classes
+matrix: two-dimensional structure, all objects belong to same class
+data.frame: two-dimensional structure, where each column contains objects of the same class
+
+```{r setup}
+# 2 vector multiplication
+vec = c(1,2,3,4)
+vec * c(1,2)
+```
+
+Matrix: 
+
+```{r}
+matrix_1 = matrix(1:8,nrow=2,ncol=4)
+matrix_2 = matrix(8:1,nrow=2,ncol=4)
+matrix_1*matrix_2
+
+```
+List
+
+
+```{r}
+name_and_age = list('Nikhil', 8, "Rohan", 10)
+class(name_and_age)
+
+```
+
+Data Frame
+
+```{r}
+set.seed(10)
+df = data.frame(id = 1:10, 
+           gender=sample(c('Male','Female'),size = 10,replace = T),
+           attended=sample(c(T,F),size = 10,replace=T),
+           score=sample(x = 1:100,size = 10,replace = T), stringsAsFactors = T)
+df
+
+```
+
+Reprex function is used to formating output in comment form
+
+
+
+
+```{r}
+
+library(reprex)
+reprex(mean(c(1,2,NA,4)),advertise = F)
+```
+
+##### Calculating Mode
+
+Most frequent value. Base R doesn’t have a built-in function for mode, but we can write a function to do it.
+
+```{r}
+library(tidyverse)
+mode_function = function(dat){
+  unique_value_list = unique(dat)
+  print(match(dat, unique_value_list))
+  print(tabulate(match(dat, unique_value_list)))
+  unique_value_list[which.max(tabulate(match(dat, unique_value_list)))]
+}
+mode_function(c(1,1,2,3,4,1,5,6,2,2,2,2,2,2,2,100))
+
+```
+##### Summary calculation 
+
+```{r}
+mpg%>%
+  summarize(Min = min(hwy),
+            FirstQuartile = quantile(hwy,0.25), # number of variables below 25% population
+            Median = median(hwy),
+            Mean = mean(hwy),
+            ThirdQuartile = quantile(hwy,0.75), # number of variables below 75% population
+            Max = max(hwy),
+            Range = max(hwy) - min(hwy),
+            SD = sd(hwy),
+            Variance = var(hwy))
+
+
+```
+##### Using Table
+
+This give the count of each variable type. (Used for categorical variable)
+
+```{r}
+
+table(mpg$cyl)
+prop.table(table(mpg$cyl))
+
+#  using Xtab
+xtabs(~cyl,data = mpg)
+
+# using metrix
+# Levels of a categorical variable are often compared based on descriptive measure of a numerical variable in what is known as a crosstab. E.g., average gas mileage of cars for each category of cylinder. Here are a few different ways to do this.
+
+tapply(X = mpg$hwy,INDEX = mpg$cyl,FUN = 'mean')
+```
+
+##### Displaying the Data in pretty format
+
+```{r}
+library(skimr)
+skim(mpg)
+library(summarytools)
+print(dfSummary(mpg,style='grid',graph.col = T),method = 'render')
+
+```
+
+#### Prediction Algorithms {.tabset}
+
+##### Decision Tree {.tabset}
+
+In decision tree the predictor space is divided into segments or it will be stratified and the predictions is made based on the summary of from that particular region.
+
+A set of *segment rules* is used to segment the predictor space.
+
+Decision Tree can be used for both predicting continuous outcome and categorical outcome.
+
+It partitions the data into smaller group that has greater proportion of one of the categories of the outcome.
+
+CART (classification and regression Tree methodology) is oldest and widely being used.
+
+**Predictors include categorical and continuous variables: Trees can handle both categorical and continuous predictors Categorical variables can be handled automatically, without dummy coding.**
+
+**Trees handles the predictors even if they are skewed. No transformation of predictors are required nor they need to be standardized. No need to create interaction term to explore join effect of 2 or more predictors**
+Joint effect here refers to how other variables include the outcome. Like for instance if a customer is purchasing the product then combination of age and income are the factors that influence the outcome variable. Decision tree will automatically handles these.
+
+**Missing values are automatically handled by decision tree by using surrogate splits.**
+
+Surrogate splits means if we have income which are having some missing values, decision tree will use surrogate split are created using other variables which are correlated with income like experience, job title etc.. this is only used as backup if primary split cannot be made on income due to missing data.
+
+###### Regression Tree Continuous
+
+
+###### Calssification Tree Categorical
+
+**Loading Data**
+
+```{r}
+# Loading the Data
+library(ISLR2)
+data(Credit)
+library(dplyr)
+Credit2 = 
+  Credit %>%
+  mutate(Balance_hilo = as.integer(Balance > median(Balance,na.rm = T)))%>%
+  mutate(Balance_hilo = factor(Balance_hilo, labels = c('low','high'),ordered = T))%>%
+  select(-Balance)
+
+```
+
+**Splitting Data**
+
+```{r}
+library(caret)
+set.seed(1031)
+split = createDataPartition(y = Credit2$Balance_hilo, p = 0.75, list = F)
+train = Credit2[split,]
+test = Credit2[-split,]
+
+```
+
+**Estimate**
+
+For instance, for a 35 year old, one can navigate through the tree to arrive at a predicted probability of 0.43 for a “high” balance. 
+
+```{r}
+library(rpart)
+library(rpart.plot)
+tree1 = rpart(Balance_hilo~Age,data = train, method = 'class')
+rpart.plot(tree1)
+
+```
+
+**Predict**
+
+```{r}
+predict(tree1, newdata = data.frame(Age = 35), type='class')
+predict(tree1, newdata = data.frame(Age = 35), type='prob')[,'high'] > 0.5
+
+```
+
+
+```{r}
+
+
+```
+
+
+```{r}
+
+
+```
+
+```{r}
+
+
+```
+
+### Python code {.tabset}
+
+#### Data Structure
+
+```{python}
+import numpy as np
+arr = np.array([[1, 2, 3], 
+               [4, 5, 6]])
+print(arr)
+
+# to cret dimensions of array:
+a = np.array(42)
+d = np.array([[[1, 2, 3], [4, 5, 6]], [[1, 2, 3], [4, 5, 6]]])
+print(a.ndim)
+print(d.ndim)
+```
+
+
+create n dimension array
+
+Access 2-D Arrays
+
+
+```{python}
+# create n dimension array:
+arr = np.array([1, 2, 3, 4], ndmin=5)
+print(arr)
+
+
+
+# Access 2-D Arrays
+arr = np.array([[1,2,3,4,5], [6,7,8,9,10]])
+
+print('2nd element on 1st row: ', arr[0, 1])
+arr
+arr = np.array([[[1, 2, 3], [4, 5, 6]], [[7, 8, 9], [10, 11, 12]]])
+arr
+print(arr[0, 1, 2])
+
+```
+Data types in Numpy:
+
+i - integer
+b - boolean
+u - unsigned integer
+f - float
+c - complex float
+m - timedelta
+M - datetime
+O - object
+S - string
+U - unicode string
+V - fixed chunk of memory for other type ( void )
+
+```{python}
+arr = np.array(['apple', 'banana', 'cherry'])
+
+print(arr.dtype)
+
+
+```
+
+Copy vs New
+
+The copy owns the data and any changes made to the copy will not affect original array, and any changes made to the original array will not affect the copy.
+
+The view does not own the data and any changes made to the view will affect the original array, and any changes made to the original array will affect the view.
+
+```{python}
+arr = np.array([1, 2, 3, 4, 5])
+x = arr.copy()
+arr[0] = 42
+
+print(arr)
+print(x)
+
+# View
+
+
+arr = np.array([1, 2, 3, 4, 5])
+x = arr.view()
+arr[0] = 42
+
+print(arr)
+print(x)
+
+```
+
+Get Shape of Array
+
+```{python}
+arr = np.array([[1, 2, 3, 4], [5, 6, 7, 8]])
+
+print(arr.shape)
+
+```
+
+Reshape 1D to 2D
+
+```{python}
+arr = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12])
+
+newarr = arr.reshape(4, 3)
+
+print(newarr)
+
+```
+
+Reshape 1D to 3D
+
+
+```{python}
+
+arr = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12])
+
+newarr = arr.reshape(2, 3, 2)
+
+print(newarr)
+```
+
+Unknown Dimension
+
+You are allowed to have one "unknown" dimension.
+
+Meaning that you do not have to specify an exact number for one of the dimensions in the reshape method.
+
+Pass -1 as the value, and NumPy will calculate this number for you.
+
+
+```{python}
+arr = np.array([1, 2, 3, 4, 5, 6, 7, 8])
+
+newarr = arr.reshape(2, 2, -1)
+
+print(newarr)
+
+```
+Flattening the arrays
+
+
+
+```{python}
+arr = np.array([[1, 2, 3], [4, 5, 6]])
+
+newarr = arr.reshape(-1)
+
+print(newarr)
+
+```
+
+ndenumerate()
+
+
+```{python}
+arr = np.array([1, 2, 3])
+
+for idx, x in np.ndenumerate(arr):
+  print(idx, x)
+  
+arr = np.array([[1, 2, 3, 4], [5, 6, 7, 8]])
+
+for idx, x in np.ndenumerate(arr):
+  print(idx, x)
+
+```
+
+
+
+
+```{python}
+
+
+```
+
+
