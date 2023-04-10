@@ -158,6 +158,23 @@ mpg%>%
   filter(displ>2) %>%
   select(manufacturer,model,year)%>%
   arrange(year)
+
+
+# another subset
+
+day_of_week = c('Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday')  
+number_of_smartwatches_sold = c(25,20,15,20,30,80,90)  
+price_per_smartwatch = c(200,200,200,200,200,150,150)  
+df = data.frame(day_of_week,number_of_smartwatches_sold,price_per_smartwatch)
+
+df
+df$price_per_smartwatch[df$day_of_week == "Saturday"]
+
+# another one
+olympics_swimming = read.csv('data/olympics_swimming.csv')
+median(na.omit(olympics_swimming$height[olympics_swimming$year==1960]))
+median(na.omit(olympics_swimming$height[olympics_swimming$year==2016 & olympics_swimming$medalist == "Yes"]))
+
 ```
 
 
@@ -288,6 +305,22 @@ ggplot(data=mpg,aes(x=displ,y=hwy))+
   facet_grid(cyl~year)
 ```
 
+
+##### Arithmetic operations
+
+
+```{r}
+#log base 5
+log(390625, base = 5)
+
+cos(0)
+
+## Type of data structure:
+# vector because if there is a character in it all the remaining elements will be converted to character
+c("I am smart", TRUE, 1000)
+
+```
+
 #### Prediction Algorithms {.tabset}
 
 ##### Decision Tree {.tabset}
@@ -362,22 +395,175 @@ predict(tree1, newdata = data.frame(Age = 35), type='prob')[,'high'] > 0.5
 
 ```
 
+#### Data Tidying  {.tabset}
+
+##### Basic Parsings {.tabset}
 
 ```{r}
+library(readr)
+parse_number('increase in sales of €123.456,78',locale = locale(grouping_mark = '.'))
+```
+
+Parse character:
+However, UTF-8 encoding may not be human readable. Would you like ice cream from \x48\xc3\xa4\x61\x67\x65\x6e\x2d\x44\x61\x7a\x73?
+
+
+```{r}
+parse_character('\x48\xc3\xa4\x61\x67\x65\x6e\x2d\x44\x61\x7a\x73')
+parse_character("\U0001F4A9")
+
+```
+**Dates**
+
+Year %Y (4 digits) %y (2 digits); 00-69 -> 2000-2069, 70-99 -> 1970-1999
+
+Month %m (2 digits) %b (abbreviated name, like “Jan”) %B (full name, “January”)
+
+Day %d (2 digits). %e (optional leading space)
+
+Time %H 0-23 hour %I 0-12, must be used with %p %p AM/PM indicator %M minutes %S integer seconds %OS real seconds %Z Time zone (as name, e.g. America/Chicago) %z (as offset from UTC, e.g. +0800)
+
+Non-digits %. skips one non-digit character %* skips any number of non-digits
+```{r}
+as.Date('4/7/1776',format='%d/%m/%Y')
+# lubridate provides a number of simple functions to convert date and time to the ISO standard.
+library(lubridate)
+mdy('7/4/1776')
+dmy('4/7/1776')
+mdy_hms('July 4, 1776 3:25:13 pm',tz = 'US/Eastern')
 
 
 ```
 
+**Extracting months, days, years once formated**
 
 ```{r}
-
+month(mdy('7/4/1776'),label = T)
+wday(mdy('7/4/1776'),label = T)
 
 ```
 
-```{r}
+**More Example**
 
+```{r}
+location = c('USA, north america','China,asia','India, asia', 'Russia, asia','France, europe','UK, europe')
+national_day = c('July 4, 1776','October 1, 1949','August 15, 1947','June 12, 1990','July 14, 1789','none')
+national_day_alt = c('4/7/1776','1/10/1949','15/8/1947','12/6/1990','14/7/1789','none')
+per_capita_dollars = c('$65,280.70','$10,261.70','$2,104.10','$11,585.00','$40,493.90','$42,300.30')
+per_capita_euros = c('55.488,59 Euro','8.722,44 Euro','1.788,48 Euro','9.847,25 Euro','34.419,82 Euro','35.955,26 Euro')
+messy_data = data.frame(location, national_day, national_day_alt, per_capita_dollars,per_capita_euros)
+# The dollar sign provides context to the numbers, however its presence gets in the way of conducting numerical analysis.
+messy_data %>%
+  mutate(per_capita_dollars = parse_number(per_capita_dollars))
+
+# Like the per_capita_dollars, this variable contains the currency label. Furthermore, the numbers are formatted using a grouping convention common in Europe.
+
+messy_data %>%
+  mutate(per_capita_dollars = parse_number(per_capita_dollars))%>%
+  mutate(per_capita_euros = parse_number(per_capita_euros, locale = locale(grouping_mark = '.')))
+
+# Date format used is Month, Date, Year.
+messy_data %>%
+  mutate(per_capita_dollars = parse_number(per_capita_dollars))%>%
+  mutate(per_capita_euros = parse_number(per_capita_euros, locale = locale(grouping_mark = '.')))%>%
+  mutate(national_day = mdy(national_day))
 
 ```
+
+**Separate**
+
+```{r}
+
+#An alternative to using regular expressions for extracting country and continent is to split continent based on the comma delimiter. The library tidyr has a function, separate that does just that. We will still use str_to_title to change case for continent. separate adds on some whitespace which is removed using str_trim.
+
+messy_data %>%
+  mutate(per_capita_dollars = parse_number(per_capita_dollars))%>%
+  mutate(per_capita_euros = parse_number(per_capita_euros, locale = locale(grouping_mark = '.')))%>%
+  mutate(national_day = mdy(national_day))%>%
+  mutate(national_day_alt = dmy(national_day_alt))%>%
+  separate(col = location,into = c('country','continent'), sep = ',')%>%
+  mutate(continent = str_trim(str_to_title(continent)))%>%
+  select(country,continent,everything())
+
+```
+
+**Using refactor (fct_recode), Rename, everything()
+
+```{r}
+head(messy_data)
+data_1 = messy_data %>% 
+  mutate(per_capita_dollars = parse_number(per_capita_dollars)) %>%
+  mutate(per_capita_euros = parse_number(per_capita_euros, locale = locale(grouping_mark = '.'))) %>%
+  mutate(national_day_alt = dmy(national_day_alt)) %>%
+  mutate(national_day = mdy(national_day)) %>%
+  separate(col = location, into = c("Country","continent"), sep = ",") %>%
+  mutate(continent = str_trim(str_to_title(continent))) %>%
+  select(Country, continent, everything()) %>%
+  mutate(continent = fct_recode(continent, "West" = "North America", "East" = "Asia", "West" = "Europe")) %>%
+  rename('Zone' = "continent")
+  
+  
+  
+  
+head(data_1)
+
+```
+
+
+##### Pivoting Data {.tabset}
+
+**Gather function**
+
+```{r}
+gdp = data.frame(c('USA','China','Japan'),
+           c(543300, 59716, 44307),
+           c(19390604, 12237700, 4872136))
+names(gdp) = c('Country','1960','2017')
+gdp
+
+#Pivot wider
+
+gdp_tall = 
+  gdp %>%
+  gather('Year','GDP',2:3)
+gdp_tall
+
+```
+
+** Pivot Longer**
+
+```{r}
+gdp %>% pivot_longer(cols = 2:3, names_to = "Year", values_to = "GDP")
+
+```
+
+
+**Spread Function**
+
+```{r}
+gdp_wide = 
+  gdp_tall %>%
+  spread('Year','GDP')
+gdp_wide
+
+# Pivot wider
+
+gdp_wide = 
+  gdp_tall %>%
+  pivot_wider(names_from = 'Year',values_from  = 'GDP')
+gdp_wide
+
+```
+
+** More Examples** (runif function is used)
+
+```{r}
+df = data.frame(id = 1:100,
+                c1 = runif(100,))
+
+```
+
+
 
 ### Python code {.tabset}
 
