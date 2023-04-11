@@ -325,7 +325,70 @@ c("I am smart", TRUE, 1000)
 
 ##### Decision Tree {.tabset}
 
+**Where/when to use trees**
+
+using large number of independent variables and
+
+when there are likely to be non-linear relationships and interactions amongst
+variables.
+
+And when interpretability of results is important
+
+**Issues**
+perform poorly in predicting relative to the best supervised learning
+approaches
+tend to overfit the data
+
+
 In decision tree the predictor space is divided into segments or it will be stratified and the predictions is made based on the summary of from that particular region.
+
+**Process Of Spliting the data**
+
+- The process begins with the entire data, R, and searches every distinct value of every predictor to find the predictor and split value that partitions the data into two groups (R1 and R2) such that the overall sum of squared errors is minimized.
+
+- Next, the process is repeated, looking for the best predictor and best split value (or cut point) in order to split the data further so as to minimize the SSE within each of the resulting regions.
+- However, this time, instead of splitting the entire predictor space, one of the previously identified regions is split. This creates three regions, R1, R2 and R3.Because of the recursive splitting nature of trees, this method is also known as recursive partitioning (and inspiration for the name of the R library, `rpart`).
+
+- This recursive partitioning process continues until a stopping criterion is reached such as number of observations in a region falls below 5.
+
+**Short Comes**
+
+- It is computationally infeasible to consider every possible partition of the feature
+space into J boxes.
+
+- This is the reason for the top-down, greedy approach of recursive binary splitting.
+
+- The approach is top-down because it begins at the top of the tree and then
+successively splits the predictor space; each split is indicated via two new branches
+further down on the tree.
+
+- It is greedy because at each step of the tree-building process, the best split is made
+at that particular step, rather than looking ahead and picking a split that will lead to
+a better tree in some future step.
+
+**Predictor Importance**
+
+- Relative importance of predictors in trees can be determined by examining the
+reduction in SSE attributed to each split.
+
+- Intuitively, predictors that appear higher in the tree, or that appear multiple times in
+the tree will be more important than predictors that appear lower in the tree or not
+at all
+
+**Summary**
+1) Use recursive binary splitting to grow a large tree on the training data, stopping only when
+each terminal node has fewer than some minimum number of observations.
+2) Apply cost complexity pruning to the large tree in order to obtain a sequence of best subtrees,
+as a function of cp.
+3) Use k-fold cross-validation to choose α. For each k = 1, . . . , K:
+    a) Repeat Steps 1 and 2 on the 𝐾−1/𝐾 th fraction of the training data, excluding the kth fold.
+    b) Evaluate the mean squared prediction error on the data in the left-out kth fold, as a
+function of cp.
+
+    c) Average the results, and pick cp to minimize the average error.
+    
+4. Return the subtree from Step 2 that corresponds to the chosen value of cp
+. 
 
 A set of *segment rules* is used to segment the predictor space.
 
@@ -343,6 +406,23 @@ Joint effect here refers to how other variables include the outcome. Like for in
 **Missing values are automatically handled by decision tree by using surrogate splits.**
 
 Surrogate splits means if we have income which are having some missing values, decision tree will use surrogate split are created using other variables which are correlated with income like experience, job title etc.. this is only used as backup if primary split cannot be made on income due to missing data.
+
+**Weakness of Trees**
+Less-than optimal predictive performance.
+– Tree models partition the predictor space into rectangular regions. If the
+relationship between predictors and outcome is not adequately described by
+these rectangles, performance will be poor.
+– Number of possible predicted outcomes is finite and is determined by the
+number of leaves. This limitation is unlikely to capture all of the nuances of the
+data.
+
+Model instability
+– Slight changes in the data can drastically change the structure of the tree,
+hence the interpretation. Thus, these models have high variance. Easy to overfit train data
+
+
+
+
 
 ###### Regression Tree Continuous
 
@@ -394,6 +474,10 @@ predict(tree1, newdata = data.frame(Age = 35), type='class')
 predict(tree1, newdata = data.frame(Age = 35), type='prob')[,'high'] > 0.5
 
 ```
+
+##### Tuning the Tree {.tabset}
+
+Test
 
 #### Data Tidying  {.tabset}
 
@@ -559,8 +643,47 @@ gdp_wide
 
 ```{r}
 df = data.frame(id = 1:100,
-                c1 = runif(100,))
+                c1 = round(runif(100,1,5),0),
+                c2 = round(runif(100,1,5),0),
+                c3 = round(runif(100,1,7),0),
+                c4 = round(runif(100,1,7),0),
+                c5 = round(runif(100,1,7),0))
+df_1 = gather(df, key = "Coupon", value = 'c', 2:length(df))
+df_1
 
+# Creating bar chart
+ggplot(data = df_1, mapping = aes(x=Coupon,y=c,fill=Coupon))+
+  geom_bar(stat='summary',position='dodge',fun='mean')
+
+## Using piped operation to directly map 
+df %>%
+  pivot_longer(cols = c1:c5, names_to = 'item',values_to='c')%>%
+  ggplot(aes(x=item,y=c,fill=item))+
+  geom_bar(stat='summary',position='dodge',fun='mean')
+  
+```
+
+** More Example with csv**
+
+```{r}
+data = read.csv('data/CrimeTrendsInOneVar.csv',header = T,skip = 4,nrows=55)
+tail(data)
+
+data %>%
+  pivot_longer(cols = Alabama:Wyoming, names_to = 'State', values_to = 'Number_of_Violent_Crimes')%>%
+  head()
+
+data_1 = gather(data, key = "State", value = "Number_of_Crimes", Alabama:length(data))
+data_1
+
+data %>%
+  pivot_longer(cols = Alabama:Wyoming, names_to = 'State', values_to = 'Number_of_Violent_Crimes')%>%
+  group_by(State)%>%
+  summarize(AverageViolentCrime = mean(Number_of_Violent_Crimes,na.rm=T))%>%
+  ggplot(aes(x=reorder(State,X = AverageViolentCrime), y=AverageViolentCrime,fill=AverageViolentCrime))+
+  geom_col()+scale_fill_continuous(low='white',high='red')+xlab('State')+ylab('Crime')+
+  theme(axis.text.y = element_text(size = 6, hjust = .5, vjust = .5, face = "plain"))+
+  coord_flip()
 ```
 
 
@@ -738,5 +861,6 @@ for idx, x in np.ndenumerate(arr):
 
 
 ```
+
 
 
