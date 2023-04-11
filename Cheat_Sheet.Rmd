@@ -477,7 +477,226 @@ predict(tree1, newdata = data.frame(Age = 35), type='prob')[,'high'] > 0.5
 
 ##### Tuning the Tree {.tabset}
 
-Test
+**Advantages**
+
+1) Trees are very easy to explain to people. In fact, they are even easier to explain than
+linear regression!
+
+2) Some people believe that decision trees more closely mirror human decision-making
+than do regression and classification approaches.
+
+3) Trees can be displayed graphically, and are easily interpreted even by a non-expert
+(especially if they are small).
+
+4) Trees can easily handle qualitative predictors without the need to create dummy
+variables.
+
+**Disadvantages And its Solution**
+
+1) Trees are prone to overfitting train data
+
+Sol: we can use cross validation to optimize the complexity and pick good model hyper parameter.
+
+
+2) Unfortunately, trees generally do not have the same level of predictive accuracy as
+some of the other prediction and classification approaches. 
+
+Sol: The prediction can be very much improved by aggregating multiple decision trees.
+
+**Tuning HyperParameter**
+Parameters are estimated during model training and hyper parameter controls the learning process 
+
+Process:
+
+1) Identify the parameters to be tuned
+  mostly we will choose CP (complexity parameter which will control the size of the tree)
+  
+
+
+2) Specify the range of hyperparametrs to evaluate and this process is called grid search
+
+For a regression tree, say 41 values of cp from 0 to 0.16 in intervals of 0.004.
+  Values to evaluate may be informed by experience. Alternatively, one can use a
+trial and error approach. E.g., begin with a broad grid search (e.g., intervals of
+0.01) and narrow it down later to focus on a specific range (e.g., intervals of
+0.001). why 0.004 is because when we divide 0.16 by 0.004 we will have 40 attributes to evaluate
+
+
+3) Train the model on each combination of hyperparameter
+
+4) measure performance
+
+Training error is a poor guide for test error
+– Test sample can only be used for evaluating the final model, not a
+series of models with different combinations of hyperparameters
+– Solution is to use a resampling procedure called cross-validation
+
+5) choose the hyper parameter which performs the best.
+Select the hyperparameter values for the model with lowest crossvalidation error
+
+**Cross Validation Error**
+
+To conclude at optimal complexity we have 2 approches:
+1) apply penality on training error rate to estimate test error rate eg: AIC, BIC etc..
+
+2) Cross-validation
+
+
+Cross validation is a general technique called resampling. Another method is bootstraping which is part of re-sampling technique.
+
+Resampling methods involve repeatedly drawing samples from a training set and refitting a model
+of interest on each sample in order to obtain more information about the fitted model
+– Model Assessment: estimate test error rates
+– Model Selection: select the appropriate level of model flexibility
+
+**Various Cross-validation methods are:**
+
+1. validation set approach
+    * Randomly split the data into a estimation set and a validation set. (split the data randomly into 2 halfs).
+  
+    * Estimate the model using the estimation sample.
+  
+    * Apply the estimated model to the validation sample
+  
+    * Error in the validation-set provides an estimate of error in a new sample. 
+    * **Goods and Issues with this approach**
+        * Simple approach.
+        * Not computationally intensive
+        * The validation estimate of the test error can be highly variable, depending on precisely which observations are included in the training set and which observations are included in the validation set.
+        * In the validation approach, only a subset of the observations — those that
+are included in the training set rather than in the validation set — are used to
+fit the model. This suggests that the validation set error may tend to
+overestimate the test error for the model fit on the entire data set. 
+
+1. k-fold cross-validation
+    + Idea is to randomly divide the data into k equal-sized parts. We leave
+out part k, fit the model to the other k − 1 parts (combined), and then
+obtain predictions for the left-out kth part.
+    + This is done in turn for each part k = 1, 2, . . . K, and then the results
+are combined.
+    + Let the K parts be C1, C2, . . . CK, where Ck denotes the indices of the observations in part k. There are nk observations in part k: if N is a multiple of K, then nk = n/K. 
+    + When k = n, we get n-fold or leave-one-out cross validation
+    + ** Evaludation**
+        + Less bias than Validation because model is trained on a larger sample
+(for 5-fold, 80% compared to 50% for Validation)
+        + Less variance because test statistic is averaged k times.
+        + Computationally more intensive than Validation but less than LOOCV
+        + Works best for k=5 or k=10
+
+
+1. leave one out cross-validation (LOOCV)
+    + Randomly divide the train sample into two halves:
+        1. Estimation Sample: n-1
+        1. Validation Sample: 1
+    + Fit the model on estimation sample
+    + Test model on validation sample
+    + Repeat Steps 1-3, n times
+    + MSE is average of n models.
+    + **Evaluation**
+        + Less bias because almost the entire sample is used for training the model
+        + Generally less variance than Validation because of n repeats.
+        + LOOCV is computationally intensive
+            + mostly because algorithms use the same approach as k-fold cross validation instead of using a computational shortcut.
+        + LOOCV sometimes useful, but typically doesn’t shake up the data enough.
+        + The estimates from each fold are highly correlated and hence their average
+can have high variance.
+        + A better choice is k = 5 or 10. 
+
+
+##### Esemble Models {.tabset}
+
+**About Ensemble Model**
+
+Ensemble models take on a wisdom of the crowds approach by
+combining predictions from a number of models.
+
+1. Two heads are better than one, Many heads are even better.
+
+1. Two categories of tree-based ensemble methods
+    + Bagging and Forests: Grow multiple trees by using bootstrapped samples and average predictions.
+    
+    + Boosting: Grow a series of trees sequentially, each tree using information from the previously grown trees
+    
+**Trees are easy to interpret but…**
+
+    + They generally underperform regression based methods
+    + And they tend to overfit the data
+    
+**Three ensemble models to improve trees are**
+
+1. Bagging
+    + Draw samples from original data with replacement
+    + Repeat multiple times
+    + **It involves 3 steps**
+        + Generating a large number of bootstrapped samples from train sample
+        + Train the model on each sample
+        + Combining models by averaging (metric outcome) or majority vote (non-metric outcome)
+    + **After all the trees have been trained, their predictions are combined by taking the average (for regression problems) or the majority vote (for classification problems) of the predictions from all the trees.**
+    + **The bagging process can help to reduce the variance of the model by reducing the impact of outliers or noisy data points, and can also improve the accuracy by reducing overfitting.**
+    + **Trees constructed in bagging are not pruned, so they tend to be very large trees. But, that is okay, because we are going to average a large number of trees.**
+    + **Averaging predictions reduces variance while leaving bias unchanged.**
+    + **Packages:**
+        + library(ipred)
+        + library(randomForest) (after a small tweak)
+
+1. Random Forests
+
+    + Random forests provide an improvement over bagged trees by way of a small tweak
+that de-correlates the trees. This reduces the variance when we average the trees.
+    + As in bagging, we build a number of decision trees on bootstrapped training
+samples.
+    + But when building these decision trees, each time a split in a tree is considered, a
+random selection of m predictors is chosen as split candidates from the full set of p
+predictors. The split is allowed to use only one of those m predictors.
+    + A fresh selection of m predictors is taken at each split, and typically we choose m ≈
+√p — that is, the number of predictors considered at each split is approximately
+equal to the square root of the total number of predictors
+    + Notice that random forest with m = p is same as bagging!!
+    + **Why consider a random sample of predictors?**
+        + Suppose that we have a very strong predictor in the data set along with a number of other moderately strong predictor, then in the collection of bagged trees, most or all of them will use the very strong predictor for the first split!
+        + All bagged trees will look similar. Hence all the predictions from the bagged trees will be highly correlated
+        + Averaging many highly correlated quantities does not lead to a large variance reduction, and thus random forests “de-correlates” the bagged trees leading to more reduction in variance.
+    + **R packages**
+        + library(randomForest)
+        + library(ranger)
+        + library(Rborist)
+
+1. Boosting
+    + Like bagging, boosting is a general approach that can be applied to many statistical learning methods for regression or classification.
+    + Recall that bagging involves creating multiple copies of the original training data set using the bootstrap, fitting a separate decision tree to each copy, and then combining all of the trees in order to create a single predictive model.
+    + Notably, each tree is built on a bootstrap data set, independent of the other trees.
+    +Boosting works in a similar way, except that the trees are grown sequentially: each tree is grown using information from previously grown trees.
+
+    + **Approach**
+        + Unlike fitting a single large decision tree to the data, which amounts to fitting
+the data hard and potentially overfitting, the boosting approach instead learns slowly.
+        + Given the current model, we fit a decision tree to the residuals from the model. We then add this new decision tree into the fitted function in order to update the residuals.
+        + Each of these trees can be rather small, with just a few terminal nodes, determined by the parameter d in the algorithm.
+        + By fitting small trees to the residuals, we slowly improve ˆf in areas where it
+does not perform well. The shrinkage parameter λ slows the process down even further, allowing more and different shaped trees to attack the residuals.
+    + **Tuning Parameters**
+        + Choice of hyperparameters is critical in establishing a boosting model. Here are some of the important ones in the Gradient Boosting Machine.
+        
+            1. n.trees: The number of trees B. Unlike bagging and random forests, boosting can overfit if B is too large, although this overfitting tends to occur slowly if at all. We use crossvalidation to select B.
+            2. shrinkage: The shrinkage parameter λ, a small positive number. This controls the rate at which boosting learns. Typical values are 0.01 or 0.001, and the right choice can
+depend on the problem. Very small λ can require using a very large value of B in order to
+achieve good performance.
+            3. interaction.depth: The number of splits d in each tree, which controls the complexity of the boosted ensemble. Often d = 1 works well, in which case each tree is a stump,
+consisting of a single split and resulting in an additive model. More generally d is the
+interaction depth, and controls the interaction order of the boosted model, since d splits
+can involve at most d variables. *
+    + **Adv. Dis.**
+        + Tend to perform better than state-of-the-art prediction models
+        + Some boosting algorithms (e.g., gbm and lightgbm) can optimize a user-defined cost function not just minimize a standard loss function
+        + Prone to overfitting. Tuning is extremely important
+        + Can be extremely slow
+        + Sensitive to extreme values
+    + **R packages**
+        + library(gbm)
+        + library(xgboost)
+        + library(lightgbm)
+
+
 
 #### Data Tidying  {.tabset}
 
@@ -614,7 +833,7 @@ gdp_tall
 
 ```
 
-** Pivot Longer**
+**Pivot Longer**
 
 ```{r}
 gdp %>% pivot_longer(cols = 2:3, names_to = "Year", values_to = "GDP")
@@ -639,7 +858,7 @@ gdp_wide
 
 ```
 
-** More Examples** (runif function is used)
+**More Examples** (runif function is used)
 
 ```{r}
 df = data.frame(id = 1:100,
