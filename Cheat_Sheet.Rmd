@@ -619,8 +619,8 @@ combining predictions from a number of models.
     
 **Trees are easy to interpret but…**
 
-    + They generally underperform regression based methods
-    + And they tend to overfit the data
+1. They generally underperform regression based methods
+1. And they tend to overfit the data
     
 **Three ensemble models to improve trees are**
 
@@ -639,7 +639,7 @@ combining predictions from a number of models.
         + library(ipred)
         + library(randomForest) (after a small tweak)
 
-1. Random Forests
+2. Random Forests
 
     + Random forests provide an improvement over bagged trees by way of a small tweak
 that de-correlates the trees. This reduces the variance when we average the trees.
@@ -681,7 +681,7 @@ does not perform well. The shrinkage parameter λ slows the process down even fu
             2. shrinkage: The shrinkage parameter λ, a small positive number. This controls the rate at which boosting learns. Typical values are 0.01 or 0.001, and the right choice can
 depend on the problem. Very small λ can require using a very large value of B in order to
 achieve good performance.
-            3. interaction.depth: The number of splits d in each tree, which controls the complexity of the boosted ensemble. Often d = 1 works well, in which case each tree is a stump,
+            1. interaction.depth: The number of splits d in each tree, which controls the complexity of the boosted ensemble. Often d = 1 works well, in which case each tree is a stump,
 consisting of a single split and resulting in an additive model. More generally d is the
 interaction depth, and controls the interaction order of the boosted model, since d splits
 can involve at most d variables. *
